@@ -1,7 +1,7 @@
 class Photo {
     constructor() {
-        // this.baseUrl = `http://ec2-18-221-63-71.us-east-2.compute.amazonaws.com:9000/api/`;
-        this.baseUrl = 'http://localhost:9000/api/';
+        this.baseUrl = `http://ec2-18-221-63-71.us-east-2.compute.amazonaws.com:9000/api/`;
+        // this.baseUrl = 'http://localhost:9000/api/';
         this.photoList = [];
     }
     getPhotoList() {
