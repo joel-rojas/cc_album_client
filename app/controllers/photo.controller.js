@@ -44,7 +44,7 @@ export class PhotoController {
             const photoFileEl = modal.find('#photoFile');
             photoNameEl.val('');
             photoDescEl.val('');
-            photoFileEl[0].files = [];
+            photoFileEl.val(null);
         };
     }
     appendMainHTMLComponents() {
