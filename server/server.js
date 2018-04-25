@@ -7,7 +7,7 @@ const webpackConfig = require('../webpack.config');
 
 const app = express();
 const router = express.Router();
-const PORT = process.env.PORT || 80;
+const PORT = process.env.PORT || 3000;
 
 app.use(webpackMiddleware(webpack(webpackConfig), {
   hot: true,

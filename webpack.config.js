@@ -21,7 +21,7 @@ module.exports = {
     contentBase: 'dist/',
     publicPath: '/',
     inline: true,
-    port: process.env.PORT || 80,
+    port: process.env.PORT || 3000,
     host: 'localhost',
     historyApiFallback: true,
   },
