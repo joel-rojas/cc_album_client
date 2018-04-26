@@ -182,7 +182,7 @@ export class PhotoController {
                 if (photo.id % MAX_ITEMS_PER_ROW === 0) {
                     rowCounter++;
                     photoListEl.append(rowElTxt);
-                    aRow = photoListEl.last();
+                    aRow = photoListEl.find('div.row').last();
                     aRow.addClass(`row-${rowCounter}`);
                 }
             });
