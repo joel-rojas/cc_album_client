@@ -28,14 +28,14 @@ export class PhotoController {
                     setTimeout(() => {
                        const alert = $('div.alert-success');
                        alert.alert('close');
-                    }, 2000);
+                    }, 3000);
                 })
                 .catch(err => {
                     modalContentEl.append(this.getUploadPhotoFailedAlertTemplate());
                     setTimeout(() => {
                         const alert = $('div.alert-danger');
                         alert.alert('close');
-                     }, 2000);
+                     }, 3000);
                 })
         };
         this.onCloseAddPhotoModalEventHandler = (ev) => {
@@ -47,12 +47,25 @@ export class PhotoController {
             photoDescEl.val('');
             photoFileEl.val(null);
         };
+        this.onThumbnailImgClickEventHandler = (ev) => {
+            const currentEl = $(ev.target);
+            const parentEl = currentEl.parent();
+            const photoImgSrc = parentEl.find('img').attr('src');
+            const nameTxt = parentEl.find('p.title').text();
+            const descTxt = parentEl.find('p.desc').text();
+            const viewPhotoModalEl = this.appEl.find('#viewPhotoModal');
+            viewPhotoModalEl.find('img.photo-img').attr('src', photoImgSrc);
+            viewPhotoModalEl.find('h4.title').text(nameTxt);
+            viewPhotoModalEl.find('p.desc').text(descTxt);
+            viewPhotoModalEl.modal('show');
+        };
     }
     appendMainHTMLComponents() {
-        this.appEl.append('<div class="title row"><h2>Photo Album App</h2></div>');
+        this.appEl.append('<div class="title row"><h2 class="col-12 col-md-12">Photo Album App</h2></div>');
         this.appEl.append('<div class="header row"></div>');
         this.appEl.append('<div class="body row"></div>');
         this.appEl.append(this.getAddPhotoModalTemplate());
+        this.appEl.append(this.getViewPhotoModalTemplate());
     }
     getPhotoListAPICall() {
         model.getPhotoList()
@@ -123,6 +136,25 @@ export class PhotoController {
             <h4>Couln't be able to upload a photo :(</h4>
         </div>`;
     }
+    getViewPhotoModalTemplate() {
+        return `<div class="modal fade bd-example-modal-lg" id="viewPhotoModal" tabindex="-1" role="dialog" aria-labelledby="viewPhotoModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-12 col-md-8">
+                                <img class="photo-img"/>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <h4 class="title"></h4>
+                                <p class="desc"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }
     renderPhotoList(list = []) {
         const photoListEl = $('.photo-list');
         photoListEl.empty();
@@ -143,6 +175,7 @@ export class PhotoController {
                     <div class="thumbnail" id="item-${photo.id}">
                         <img class="img-thumbnail" src="${photo.link}"/>
                         <p class="title">${photo.name}</p>
+                        <p class="desc d-none">${photo.description}</p>
                     </div>                
                 </div>`;
                 row.append(thumbnailElTxt);
@@ -155,12 +188,24 @@ export class PhotoController {
             });
         } else {
             photoListEl.last().append('<p>No photos to show. Please add some photos');
-        }  
+        }
+        const thumbnailEl = photoListEl.find('.thumbnail');
+        if (thumbnailEl.length > 0) {
+            thumbnailEl.ready(() => {
+                this.setPhotoImgClickEvent();
+            });
+        }
+        
     }
     setAddPhotoModalEvents() {
         const addPhotoBtnEl = this.appEl.find('button#uploadPhoto');
         addPhotoBtnEl.click(this.onUploadPhotoEventHandler.bind(this));
         const addPhotoModalCloseBtnEl = this.appEl.find('button.close-ev');
         addPhotoModalCloseBtnEl.click(this.onCloseAddPhotoModalEventHandler.bind(this));
+    }
+    setPhotoImgClickEvent() {
+        const photoListCtnEl = this.appEl.find('.photo-list');
+        const thumbnailEl = photoListCtnEl.find('.thumbnail');
+        thumbnailEl.click(this.onThumbnailImgClickEventHandler.bind(this));
     }
 }
