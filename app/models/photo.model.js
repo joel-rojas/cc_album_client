@@ -18,11 +18,15 @@ class Photo {
         formData.append('name', data.name);
         formData.append('description', data.description);
         formData.append('file', data.file);
-        return $.post({
+        return $.ajax({
             url,
+            enctype: 'multipart/form-data',
+            method: 'POST',
+            dataType: 'json',
             data: formData,
-            processData: false, // Don't process the files
-            contentType: false
+            processData: false,
+            contentType: false,
+            success(res){}
         })
         .then(response => response.data)
         .catch(err => err)

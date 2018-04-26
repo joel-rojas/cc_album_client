@@ -7,8 +7,9 @@ export class PhotoController {
     constructor() {
         this.appEl = $('#app');
         this.onUploadPhotoEventHandler = (ev) => {
+            ev.preventDefault();
             const modal = this.appEl.find('div#addPhotoModal');
-            const modalContentEl = modal.find('modal-content');
+            const modalContentEl = modal.find('.modal-content');
             const photoNameEl = modal.find('#photoName');
             const photoDescEl = modal.find('#photoDesc');
             const photoFileEl = modal.find('#photoFile');
