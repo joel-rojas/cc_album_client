@@ -238,9 +238,8 @@ export class PhotoController {
      * This method appends the list of photos in the app. It uses card component templates from Bootstrap 4 library.
      * Sets Thumbnail element click event once a thumbnail has been rendered in app.
      * @param {Object[]} list - List of photos from Photo model. 
-     * @param {number} MAX_ITEMS_PER_ROW - Max items to be set for each row in the album list view. 
      */
-    renderPhotoList(list = [], MAX_ITEMS_PER_ROW = 3) {
+    renderPhotoList(list = []) {
         const photoListEl = $('.photo-list');
         const photoCtn = photoListEl.find('.row.photo-ctn');
         photoCtn.empty();        
