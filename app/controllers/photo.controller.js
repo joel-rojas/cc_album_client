@@ -4,13 +4,39 @@ import {uiUtils} from '../utils/ui.conf';
 const photoListViewPath = '../views/photo.html';
 const photoAddViewPath = '../views/add-photo.html';
 
+/**
+ * Photo Controller. This controller renders the distinct UI views for this particular page of the app, handles distinct UI events and 
+ * performs API calls to the server to get a list of photos and to upload a photo with title and description.
+ */
 export class PhotoController {
+    /**
+     * @constructor. Inits public UI properties, its model property and all the UI events as public methods.
+     */
     constructor() {
+        /**
+         * @property Gets the first parent element from app. 
+         */
         this.appEl = $('#app');
         this.resizeTimeout = null;
+        /**
+         * @property Saves window full width.
+         */
         this.currentWidth = window.innerWidth;
+        /**
+         * @property Sets a reference to UiUtils object from its class.
+         */
         this.uiUtils = uiUtils;
+        /**
+         * @property Sets a reference to Photo's Model object from its class
+         */
         this.model = model;
+        /**
+         * @event click This event triggers upload photo button click event from Add Photo modal component. 
+         * It performs an API call to the server in order to save photo name, description and file data. 
+         * If the call is successful then a success alert message is shown and form fields values will be cleaned.
+         * Otherwise, the call shows an error alert message and form field values won't be cleaned.
+         * @param {DOMEvent} ev - DOM event object 
+         */
         this.onUploadPhotoEventHandler = (ev) => {
             ev.preventDefault();
             const modal = this.appEl.find('div#addPhotoModal');
@@ -30,6 +56,7 @@ export class PhotoController {
                 .then(res => {
                     this.getPhotoListAPICall();                    
                     modalContentEl.append(this.getUploadPhotoSuccessAlertTemplate());
+                    this.onCloseAddPhotoModalEventHandler.call(this);
                     setTimeout(() => {
                        const alert = $('div.alert-success');
                        alert.alert('close');
@@ -43,6 +70,11 @@ export class PhotoController {
                      }, 3000);
                 })
         };
+        /**
+         * @event click This event triggers close button click event from Add Photo modal component.
+         * It closes the Add Photo modal component and cleans Add Photo modal form field values.
+         * @param {DOMEvent} ev - DOM event object
+         */
         this.onCloseAddPhotoModalEventHandler = (ev) => {
             const modal = this.appEl.find('div#addPhotoModal');
             const photoNameEl = modal.find('#photoName');
@@ -52,6 +84,11 @@ export class PhotoController {
             photoDescEl.val('');
             photoFileEl.val(null);
         };
+        /**
+         * @event click This event triggers thumbnail element click event from the photo list view.
+         * It shows View Photo modal component and populates photo datailed data from thumbanil element to modal elements.
+         * @param {DOMEvent} ev - DOM event object 
+         */
         this.onThumbnailImgClickEventHandler = (ev) => {
             const currentEl = $(ev.target);
             const parentEl = currentEl.parent();
@@ -64,6 +101,10 @@ export class PhotoController {
             viewPhotoModalEl.find('p.desc').text(descTxt);
             viewPhotoModalEl.modal('show');
         };
+        /**
+         * This is a helper function which it will be called when a screen resize event has finished to perform the resizing process.
+         * It calls to setPhotoListUI method to re-render the photo album list according to the resized screen width value.
+         */
         this.onResizeFn = () => {
             this.currentWidth = window.innerWidth;
             const cardLayoutEl = this.appEl.find('.card-deck');
@@ -74,12 +115,20 @@ export class PhotoController {
                 });
             }
         }
+        /**
+         * @event resize This evennt triggers window resize event.
+         * It calls onResizeFn method once the resize event has finished.
+         * @param {DOMEvent} ev - DOM event object 
+         */
         this.onResizeScreenEventHandler = (ev) => {
             clearTimeout(this.resizeTimeout);
             this.resizeTimeout = setTimeout(this.onResizeFn.bind(this), 100);
         };
         this.setScreenResizeEvent();
     }
+    /**
+     * This method appends all main DOM elements to this controller.
+     */
     appendMainHTMLComponents() {
         this.appEl.append('<div class="title row"><h2 class="col-12 col-md-12">Photo Album App</h2></div>');
         this.appEl.append('<div class="header row"></div>');
@@ -87,6 +136,11 @@ export class PhotoController {
         this.appEl.append(this.getAddPhotoModalTemplate());
         this.appEl.append(this.getViewPhotoModalTemplate());
     }
+    /**
+     * This method performs PhotoList API call to the server. If the call is successful then it saves to photo model property and 
+     * it calls to setPhotoListUI method to re-render the photo album list. Otherwise, it will append an error message to the app 
+     * describing the error from API call.
+     */
     getPhotoListAPICall() {
         this.model.getPhotoList()
             .then(data => {
@@ -100,6 +154,9 @@ export class PhotoController {
                 photoListEl.append('<p>There was a problem to get photo album list.</p>');
             });    
     }
+    /**
+     * This methods sets main UI views to be rendered on the app.  
+     */
     initViews() {
         const self = this;
         this.appendMainHTMLComponents();
@@ -112,6 +169,10 @@ export class PhotoController {
             self.setAddPhotoModalEvents();
         });
     }
+    /**
+     * Returns Add photo modal HTML template as string. 
+     * @returns {String}
+     */
     getAddPhotoModalTemplate() {
         return `<div class="modal fade" id="addPhotoModal" tabindex="-1" role="dialog" aria-labelledby="addPhotoModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
@@ -146,16 +207,28 @@ export class PhotoController {
             </div>
         </div>`;
     }
+    /**
+     * Returns Add-Photo's success alert HTML template as string. 
+     * @returns {String}
+     */
     getUploadPhotoSuccessAlertTemplate() {
         return `<div class="alert alert-success" role="alert">
             <h4>Photo uploaded successfully!</h4>
         </div>`;
     }
+    /**
+     * Returns Add-Photo's error alert HTML template as string. 
+     * @returns {String}
+     */
     getUploadPhotoFailedAlertTemplate() {
         return `<div class="alert alert-danger" role="alert">
             <h4>Couln't be able to upload a photo :(</h4>
         </div>`;
     }
+    /**
+     * Returns View-Photo modal HTML template as string. 
+     * @returns {String}
+     */
     getViewPhotoModalTemplate() {
         return `<div class="modal fade bd-example-modal-lg" id="viewPhotoModal" tabindex="-1" role="dialog" aria-labelledby="viewPhotoModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -185,6 +258,12 @@ export class PhotoController {
             </div>
         </div>`;
     }
+    /**
+     * This method appends the list of photos in the app. It uses card component templates from Bootstrap 4 library.
+     * Sets Thumbnail element click event once a thumbnail has been rendered in app.
+     * @param {Object[]} list - List of photos from Photo model. 
+     * @param {number} MAX_ITEMS_PER_ROW - Max items to be set for each row in the album list view. 
+     */
     renderPhotoList(list = [], MAX_ITEMS_PER_ROW = 3) {
         const photoListEl = $('.photo-list');
         photoListEl.empty();
@@ -242,17 +321,26 @@ export class PhotoController {
         }
         
     }
+    /**
+     * This method sets add-photo modal UI events.
+     */
     setAddPhotoModalEvents() {
         const addPhotoBtnEl = this.appEl.find('button#uploadPhoto');
         addPhotoBtnEl.click(this.onUploadPhotoEventHandler.bind(this));
         const addPhotoModalCloseBtnEl = this.appEl.find('button.close-ev');
         addPhotoModalCloseBtnEl.click(this.onCloseAddPhotoModalEventHandler.bind(this));
     }
+    /**
+     * This method sets thumbnail element UI event (For each photo shown in app).
+     */
     setPhotoImgClickEvent() {
         const photoListCtnEl = this.appEl.find('.photo-list');
         const cardEl = photoListCtnEl.find('.card');
         cardEl.click(this.onThumbnailImgClickEventHandler.bind(this));
     }
+    /**
+     * This method calls to renderPhotoList to re-render the photo list according to screen width conditions.
+     */
     setPhotoListUI() {
         const widthMap = this.uiUtils.getScreenWidth();
         if (this.currentWidth >= widthMap.sm && this.currentWidth < widthMap.md) {
@@ -261,6 +349,9 @@ export class PhotoController {
             this.renderPhotoList(this.model.photoList);
         }
     }
+    /**
+     * This method sets window resize UI event.
+     */
     setScreenResizeEvent() {
         $(window).resize(this.onResizeScreenEventHandler.bind(this));
     }
