@@ -1,4 +1,5 @@
 import {model} from '../models/photo.model';
+import {uiUtils} from '../utils/ui.conf';
 
 const photoListViewPath = '../views/photo.html';
 const photoAddViewPath = '../views/add-photo.html';
@@ -6,6 +7,10 @@ const photoAddViewPath = '../views/add-photo.html';
 export class PhotoController {
     constructor() {
         this.appEl = $('#app');
+        this.resizeTimeout = null;
+        this.currentWidth = window.innerWidth;
+        this.uiUtils = uiUtils;
+        this.model = model;
         this.onUploadPhotoEventHandler = (ev) => {
             ev.preventDefault();
             const modal = this.appEl.find('div#addPhotoModal');
@@ -21,7 +26,7 @@ export class PhotoController {
                 description: photoDescText,
                 file: photoFile
             };
-            model.addPhoto(data)
+            this.model.addPhoto(data)
                 .then(res => {
                     this.getPhotoListAPICall();                    
                     modalContentEl.append(this.getUploadPhotoSuccessAlertTemplate());
@@ -59,6 +64,21 @@ export class PhotoController {
             viewPhotoModalEl.find('p.desc').text(descTxt);
             viewPhotoModalEl.modal('show');
         };
+        this.onResizeFn = () => {
+            this.currentWidth = window.innerWidth;
+            const cardLayoutEl = this.appEl.find('.card-deck');
+            const cardEl = cardLayoutEl.find('.card');
+            if (cardEl.length > 0) {
+                cardEl.ready(() => {
+                    this.setPhotoListUI();
+                });
+            }
+        }
+        this.onResizeScreenEventHandler = (ev) => {
+            clearTimeout(this.resizeTimeout);
+            this.resizeTimeout = setTimeout(this.onResizeFn.bind(this), 100);
+        };
+        this.setScreenResizeEvent();
     }
     appendMainHTMLComponents() {
         this.appEl.append('<div class="title row"><h2 class="col-12 col-md-12">Photo Album App</h2></div>');
@@ -68,13 +88,13 @@ export class PhotoController {
         this.appEl.append(this.getViewPhotoModalTemplate());
     }
     getPhotoListAPICall() {
-        model.getPhotoList()
+        this.model.getPhotoList()
             .then(data => {
-                model.photoList = Object.assign([], data);                
-                this.renderPhotoList(model.photoList);
+                this.model.photoList = Object.assign([], data);
+                this.setPhotoListUI();
             })
             .catch(err => {
-                model.photoList = [];
+                this.model.photoList = [];
                 const photoListEl = $('.photo-list');
                 photoListEl.empty();
                 photoListEl.append('<p>There was a problem to get photo album list.</p>');
@@ -155,35 +175,50 @@ export class PhotoController {
             </div>
         </div>`;
     }
-    renderPhotoList(list = []) {
+    renderPhotoList(list = [], MAX_ITEMS_PER_ROW = 3) {
         const photoListEl = $('.photo-list');
         photoListEl.empty();
         photoListEl.addClass('col-12');
         photoListEl.addClass('col-md-12');
 
-        let rowCounter = 1;
-        const MAX_ITEMS_PER_ROW = 4;
-        const rowElTxt = '<div class="row"></div>';
+        const cardLayoutElTxt = '<div class="card-deck"></div>'
+        photoListEl.append(cardLayoutElTxt);
+
+        let deckCounter = 1;
+        let cardCounter = 0;
         
-        photoListEl.append(rowElTxt);
         if (list.length > 0) {
-            let aRow = photoListEl.find('div.row');
-            aRow.addClass(`row-${rowCounter}`);
-            list.forEach(photo => {
-                const row = photoListEl.find(`div.row-${rowCounter}`);
-                const thumbnailElTxt = `<div class="col-3 col-md-3">
-                    <div class="thumbnail" id="item-${photo.id}">
-                        <img class="img-thumbnail" src="${photo.link}"/>
-                        <p class="title">${photo.name}</p>
+            let aCardDeckEl = photoListEl.find('.card-deck');
+            aCardDeckEl.addClass(`cdeck-${deckCounter}`);
+            list.forEach((photo, index, arr) => {
+                cardCounter++;                
+                const deckEl = photoListEl.find(`div.cdeck-${deckCounter}`);
+                const cardElTxt = `<div class="card card-${cardCounter}">
+                    <img class="card-img-top" src="${photo.link}">
+                    <div class="card-body">
+                        <h5 class="card-title">${photo.name}</h5>
                         <p class="desc d-none">${photo.description}</p>
-                    </div>                
+                    </div>
                 </div>`;
-                row.append(thumbnailElTxt);
-                if (photo.id % MAX_ITEMS_PER_ROW === 0) {
-                    rowCounter++;
-                    photoListEl.append(rowElTxt);
-                    aRow = photoListEl.find('div.row').last();
-                    aRow.addClass(`row-${rowCounter}`);
+                deckEl.append(cardElTxt);                
+                const lastItem = arr[arr.length - 1];
+                if (lastItem.id === photo.id && cardCounter < MAX_ITEMS_PER_ROW) {
+                    const widthMap = this.uiUtils.getScreenWidth();
+                    if (this.currentWidth > widthMap.sm) {
+                        let leftItems = MAX_ITEMS_PER_ROW - cardCounter;
+                        while (leftItems != 0) {
+                            const invisibleCardElTxt = '<div class="card invisible"></div>';
+                            deckEl.append(invisibleCardElTxt);
+                            leftItems--;
+                        }
+                    }
+                }
+                if (cardCounter === MAX_ITEMS_PER_ROW && arr.length > (MAX_ITEMS_PER_ROW * deckCounter)) {
+                    cardCounter = 0;
+                    deckCounter++;
+                    photoListEl.append(cardLayoutElTxt);
+                    aCardDeckEl = photoListEl.find('div.card-deck').last();
+                    aCardDeckEl.addClass(`cdeck-${deckCounter}`);
                 }
             });
         } else {
@@ -207,5 +242,16 @@ export class PhotoController {
         const photoListCtnEl = this.appEl.find('.photo-list');
         const thumbnailEl = photoListCtnEl.find('.thumbnail');
         thumbnailEl.click(this.onThumbnailImgClickEventHandler.bind(this));
+    }
+    setPhotoListUI() {
+        const widthMap = this.uiUtils.getScreenWidth();
+        if (this.currentWidth >= widthMap.sm && this.currentWidth < widthMap.md) {
+            this.renderPhotoList(this.model.photoList, 2);
+        } else {
+            this.renderPhotoList(this.model.photoList);
+        }
+    }
+    setScreenResizeEvent() {
+        $(window).resize(this.onResizeScreenEventHandler.bind(this));
     }
 }

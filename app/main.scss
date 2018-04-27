@@ -12,6 +12,24 @@ div.body {
     padding-top: 15px;
     padding-bottom: 15px;
 }
+.card-deck {
+    padding: 15px 0;
+    .card {
+        height: 300px;
+        .card-img-top{
+            height: 180px;
+            margin: auto;
+            display: block;
+        }
+        .card-body {
+            .card-title {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        }
+    }
+}
 .thumbnail {
     height: 200px;
 }
