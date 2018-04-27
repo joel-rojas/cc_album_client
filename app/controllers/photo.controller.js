@@ -56,11 +56,11 @@ export class PhotoController {
             const currentEl = $(ev.target);
             const parentEl = currentEl.parent();
             const photoImgSrc = parentEl.find('img').attr('src');
-            const nameTxt = parentEl.find('p.title').text();
-            const descTxt = parentEl.find('p.desc').text();
+            const nameTxt = parentEl.find('h5.card-title').text();
+            const descTxt = parentEl.find('p.card-desc').text();
             const viewPhotoModalEl = this.appEl.find('#viewPhotoModal');
             viewPhotoModalEl.find('img.photo-img').attr('src', photoImgSrc);
-            viewPhotoModalEl.find('h4.title').text(nameTxt);
+            viewPhotoModalEl.find('h5.modal-title').text(nameTxt);
             viewPhotoModalEl.find('p.desc').text(descTxt);
             viewPhotoModalEl.modal('show');
         };
@@ -158,19 +158,29 @@ export class PhotoController {
     }
     getViewPhotoModalTemplate() {
         return `<div class="modal fade bd-example-modal-lg" id="viewPhotoModal" tabindex="-1" role="dialog" aria-labelledby="viewPhotoModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content">
-                    <div class="container-fluid">
-                        <div class="row">
-                            <div class="col-12 col-md-8">
-                                <img class="photo-img"/>
+                    <div class="modal-header">
+                        <h5 class="modal-title title" id="viewPhotoModalLabel"></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="container-fluid">
+                            <div class="row d-block">
+                                <div class="col-12 img-ctn">
+                                    <img class="photo-img"/>
+                                </div>
                             </div>
-                            <div class="col-12 col-md-4">
-                                <h4 class="title"></h4>
-                                <p class="desc"></p>
+                            <div class="row d-block">
+                                <div class="col-12">
+                                    <p class="desc"></p>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    
                 </div>
             </div>
         </div>`;
@@ -197,7 +207,7 @@ export class PhotoController {
                     <img class="card-img-top" src="${photo.link}">
                     <div class="card-body">
                         <h5 class="card-title">${photo.name}</h5>
-                        <p class="desc d-none">${photo.description}</p>
+                        <p class="card-desc d-none">${photo.description}</p>
                     </div>
                 </div>`;
                 deckEl.append(cardElTxt);                
@@ -224,9 +234,9 @@ export class PhotoController {
         } else {
             photoListEl.last().append('<p>No photos to show. Please add some photos');
         }
-        const thumbnailEl = photoListEl.find('.thumbnail');
-        if (thumbnailEl.length > 0) {
-            thumbnailEl.ready(() => {
+        const cardEl = photoListEl.find('.card');
+        if (cardEl.length > 0) {
+            cardEl.ready(() => {
                 this.setPhotoImgClickEvent();
             });
         }
@@ -240,8 +250,8 @@ export class PhotoController {
     }
     setPhotoImgClickEvent() {
         const photoListCtnEl = this.appEl.find('.photo-list');
-        const thumbnailEl = photoListCtnEl.find('.thumbnail');
-        thumbnailEl.click(this.onThumbnailImgClickEventHandler.bind(this));
+        const cardEl = photoListCtnEl.find('.card');
+        cardEl.click(this.onThumbnailImgClickEventHandler.bind(this));
     }
     setPhotoListUI() {
         const widthMap = this.uiUtils.getScreenWidth();
