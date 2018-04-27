@@ -101,30 +101,6 @@ export class PhotoController {
             viewPhotoModalEl.find('p.desc').text(descTxt);
             viewPhotoModalEl.modal('show');
         };
-        /**
-         * This is a helper function which it will be called when a screen resize event has finished to perform the resizing process.
-         * It calls to setPhotoListUI method to re-render the photo album list according to the resized screen width value.
-         */
-        this.onResizeFn = () => {
-            this.currentWidth = window.innerWidth;
-            const cardLayoutEl = this.appEl.find('.card-deck');
-            const cardEl = cardLayoutEl.find('.card');
-            if (cardEl.length > 0) {
-                cardEl.ready(() => {
-                    this.setPhotoListUI();
-                });
-            }
-        }
-        /**
-         * @event resize This evennt triggers window resize event.
-         * It calls onResizeFn method once the resize event has finished.
-         * @param {DOMEvent} ev - DOM event object 
-         */
-        this.onResizeScreenEventHandler = (ev) => {
-            clearTimeout(this.resizeTimeout);
-            this.resizeTimeout = setTimeout(this.onResizeFn.bind(this), 100);
-        };
-        this.setScreenResizeEvent();
     }
     /**
      * This method appends all main DOM elements to this controller.
@@ -138,14 +114,14 @@ export class PhotoController {
     }
     /**
      * This method performs PhotoList API call to the server. If the call is successful then it saves to photo model property and 
-     * it calls to setPhotoListUI method to re-render the photo album list. Otherwise, it will append an error message to the app 
+     * it calls to renderPhotoList method to render the photo album list view. Otherwise, it will append an error message to the app 
      * describing the error from API call.
      */
     getPhotoListAPICall() {
         this.model.getPhotoList()
             .then(data => {
                 this.model.photoList = Object.assign([], data);
-                this.setPhotoListUI();
+                this.renderPhotoList(this.model.photoList);
             })
             .catch(err => {
                 this.model.photoList = [];
@@ -266,50 +242,25 @@ export class PhotoController {
      */
     renderPhotoList(list = [], MAX_ITEMS_PER_ROW = 3) {
         const photoListEl = $('.photo-list');
-        photoListEl.empty();
-        photoListEl.addClass('col-12');
-        photoListEl.addClass('col-md-12');
+        const photoCtn = photoListEl.find('.row.photo-ctn');
+        photoCtn.empty();        
 
-        const cardLayoutElTxt = '<div class="card-deck"></div>'
-        photoListEl.append(cardLayoutElTxt);
-
-        let deckCounter = 1;
-        let cardCounter = 0;
-        
         if (list.length > 0) {
-            let aCardDeckEl = photoListEl.find('.card-deck');
-            aCardDeckEl.addClass(`cdeck-${deckCounter}`);
-            list.forEach((photo, index, arr) => {
-                cardCounter++;                
-                const deckEl = photoListEl.find(`div.cdeck-${deckCounter}`);
-                const cardElTxt = `<div class="card card-${cardCounter}">
-                    <img class="card-img-top" src="${photo.link}">
-                    <div class="card-body">
-                        <h5 class="card-title">${photo.name}</h5>
-                        <p class="card-desc d-none">${photo.description}</p>
+            let index = 0;
+            while (index < list.length) {
+                const photoObj = list[index];
+                const photoItemsTxt = `<div class="col-item col-12 col-sm-6 col-md-4 col-lg-4 col-xl-3">
+                    <div class="card">
+                        <img class="card-img-top" src="${photoObj.link}">
+                        <div class="card-body">
+                            <h5 class="card-title">${photoObj.name}</h5>
+                            <p class="card-desc d-none">${photoObj.description}</p>
+                        </div>
                     </div>
-                </div>`;
-                deckEl.append(cardElTxt);                
-                const lastItem = arr[arr.length - 1];
-                if (lastItem.id === photo.id && cardCounter < MAX_ITEMS_PER_ROW) {
-                    const widthMap = this.uiUtils.getScreenWidth();
-                    if (this.currentWidth > widthMap.sm) {
-                        let leftItems = MAX_ITEMS_PER_ROW - cardCounter;
-                        while (leftItems != 0) {
-                            const invisibleCardElTxt = '<div class="card invisible"></div>';
-                            deckEl.append(invisibleCardElTxt);
-                            leftItems--;
-                        }
-                    }
-                }
-                if (cardCounter === MAX_ITEMS_PER_ROW && arr.length > (MAX_ITEMS_PER_ROW * deckCounter)) {
-                    cardCounter = 0;
-                    deckCounter++;
-                    photoListEl.append(cardLayoutElTxt);
-                    aCardDeckEl = photoListEl.find('div.card-deck').last();
-                    aCardDeckEl.addClass(`cdeck-${deckCounter}`);
-                }
-            });
+                </div>`
+                photoCtn.append(photoItemsTxt);
+                index++;
+            }
         } else {
             photoListEl.last().append('<p>No photos to show. Please add some photos');
         }
@@ -319,7 +270,6 @@ export class PhotoController {
                 this.setPhotoImgClickEvent();
             });
         }
-        
     }
     /**
      * This method sets add-photo modal UI events.
@@ -337,22 +287,5 @@ export class PhotoController {
         const photoListCtnEl = this.appEl.find('.photo-list');
         const cardEl = photoListCtnEl.find('.card');
         cardEl.click(this.onThumbnailImgClickEventHandler.bind(this));
-    }
-    /**
-     * This method calls to renderPhotoList to re-render the photo list according to screen width conditions.
-     */
-    setPhotoListUI() {
-        const widthMap = this.uiUtils.getScreenWidth();
-        if (this.currentWidth >= widthMap.sm && this.currentWidth < widthMap.md) {
-            this.renderPhotoList(this.model.photoList, 2);
-        } else {
-            this.renderPhotoList(this.model.photoList);
-        }
-    }
-    /**
-     * This method sets window resize UI event.
-     */
-    setScreenResizeEvent() {
-        $(window).resize(this.onResizeScreenEventHandler.bind(this));
     }
 }
